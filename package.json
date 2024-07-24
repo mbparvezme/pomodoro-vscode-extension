@@ -1,7 +1,7 @@
 {
   "name": "promodoro",
   "displayName": "Promodoro Dev Time Management",
-  "description": "Promodoro is a time management extension for Visual Studio Code designed to enhance developer productivity using the Promodoro technique. This extension displays a customizable Promodoro clock in the status bar, helping you to work in focused intervals with regular breaks. Boost your productivity and maintain a healthy work rhythm with Promodoro, the perfect companion for your coding sessions.",
+  "description": "Promodoro is a Visual Studio Code extension that boosts productivity using the Promodoro technique. It features a customizable clock in the status bar, helping you work in focused intervals with regular breaks. Enhance your coding sessions with Promodoro.",
   "version": "0.9.0",
   "publisher": "mbparvezme",
   "publisherUrl": "https://www.mbparvez.me",
