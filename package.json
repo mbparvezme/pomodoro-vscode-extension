@@ -8,6 +8,8 @@
   "engines": {
     "vscode": "^1.91.0"
   },
+  "repository": "https://github.com/mbparvezme/php-artisan-alias",
+  "license": "MIT",
   "icon" : "icon.png",
   "categories": [
     "Other"
