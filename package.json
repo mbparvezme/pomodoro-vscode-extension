@@ -1,0 +1,66 @@
+{
+  "name": "promodoro",
+  "displayName": "Promodoro Dev Time Management",
+  "description": "Promodoro is a time management extension for Visual Studio Code designed to enhance developer productivity using the Promodoro technique. This extension displays a customizable Promodoro clock in the status bar, helping you to work in focused intervals with regular breaks. Boost your productivity and maintain a healthy work rhythm with Promodoro, the perfect companion for your coding sessions.",
+  "version": "0.9.0",
+  "publisher": "mbparvezme",
+  "publisherUrl": "https://www.mbparvez.me",
+  "engines": {
+    "vscode": "^1.91.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "promodoro.startPromodoro",
+        "title": "Start Promodoro"
+      },
+      {
+        "command": "promodoro.stopPromodoro",
+        "title": "Stop Promodoro"
+      }
+    ],
+    "colors": [
+      {
+        "id": "promodoro.breakTextColor",
+        "description": "Color used for Promodoro break time text in status bar.",
+        "defaults": {
+          "light": "#BB0000",
+          "dark": "#FFD700",
+          "highContrast": "#FFFF00"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.7",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.91.0",
+    "@typescript-eslint/eslint-plugin": "^7.14.1",
+    "@typescript-eslint/parser": "^7.11.0",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.4.0",
+    "eslint": "^8.57.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
+    "webpack": "^5.92.1",
+    "webpack-cli": "^5.1.4"
+  }
+}
