@@ -2,7 +2,7 @@
   "name": "pomodoro",
   "displayName": "Pomodoro Dev Time Management",
   "description": "Pomodoro is a Visual Studio Code extension that boosts productivity using the Pomodoro technique. It features a customizable clock in the status bar, helping you work in focused intervals with regular breaks. Enhance your coding sessions with Pomodoro.",
-  "version": "0.9.0",
+  "version": "0.9.3",
   "publisher": "mbparvezme",
   "publisherUrl": "https://www.mbparvez.me",
   "engines": {
@@ -10,7 +10,7 @@
   },
   "repository": "https://github.com/mbparvezme/pomodoro-vscode-extension",
   "license": "MIT",
-  "icon" : "icon.png",
+  "icon": "icon.png",
   "categories": [
     "Other"
   ],
