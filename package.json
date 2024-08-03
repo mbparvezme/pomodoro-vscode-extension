@@ -1,14 +1,14 @@
 {
-  "name": "promodoro",
-  "displayName": "Promodoro Dev Time Management",
-  "description": "Promodoro is a Visual Studio Code extension that boosts productivity using the Promodoro technique. It features a customizable clock in the status bar, helping you work in focused intervals with regular breaks. Enhance your coding sessions with Promodoro.",
+  "name": "pomodoro",
+  "displayName": "Pomodoro Dev Time Management",
+  "description": "Pomodoro is a Visual Studio Code extension that boosts productivity using the Pomodoro technique. It features a customizable clock in the status bar, helping you work in focused intervals with regular breaks. Enhance your coding sessions with Pomodoro.",
   "version": "0.9.0",
   "publisher": "mbparvezme",
   "publisherUrl": "https://www.mbparvez.me",
   "engines": {
     "vscode": "^1.91.0"
   },
-  "repository": "https://github.com/mbparvezme/promodoro-vscode-extension",
+  "repository": "https://github.com/mbparvezme/pomodoro-vscode-extension",
   "license": "MIT",
   "icon" : "icon.png",
   "categories": [
@@ -21,18 +21,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "promodoro.startPromodoro",
-        "title": "Start Promodoro"
+        "command": "pomodoro.startPomodoro",
+        "title": "Start Pomodoro"
       },
       {
-        "command": "promodoro.stopPromodoro",
-        "title": "Stop Promodoro"
+        "command": "pomodoro.stopPomodoro",
+        "title": "Stop Pomodoro"
       }
     ],
     "colors": [
       {
-        "id": "promodoro.breakTextColor",
-        "description": "Color used for Promodoro break time text in status bar.",
+        "id": "pomodoro.breakTextColor",
+        "description": "Color used for Pomodoro break time text in status bar.",
         "defaults": {
           "light": "#BB0000",
           "dark": "#FFD700",
