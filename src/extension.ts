@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { exec } from 'child_process';
 
-// Interface for configuration settings
 interface Config {
 	pomodoroDuration: number;   // Duration of the Pomodoro session in seconds
 	shortBreakDuration: number; // Duration of a short break in seconds
@@ -11,9 +10,16 @@ interface Config {
 
 let config: Config;
 let ctx: vscode.ExtensionContext;
+let pomodoroStatus: boolean = false; // Indicates if the Pomodoro timer is currently running
+let pomodoroPaused: boolean = false; // Indicates if the Pomodoro timer is currently paused
 let pomodoroCount = 0; // Counter to track completed Pomodoros
 let pomodoroInterval: NodeJS.Timeout | undefined; // Timer for Pomodoro or break
 let pomodoroStatusBar: vscode.StatusBarItem; // Status bar item for displaying Pomodoro timer
+
+// Track click events to distinguish between single and double clicks
+let clickTimeout: NodeJS.Timeout | undefined;
+const clickDelay = 250; // Delay to detect double click (milliseconds)
+let secondsRemaining: number; // Variable to track the remaining seconds of the current Pomodoro or break
 
 /**
  * Initializes the extension and loads configuration settings.
@@ -23,42 +29,86 @@ let pomodoroStatusBar: vscode.StatusBarItem; // Status bar item for displaying P
 const initialize = (update: boolean = false) => {
 	const userConfig = vscode.workspace.getConfiguration('pomodoro');
 	config = {
-		pomodoroDuration: userConfig.get<number>('pomodoroDuration', .125) * 60, // Convert hours to seconds
-		shortBreakDuration: userConfig.get<number>('shortBreakDuration', .125) * 60, // Convert hours to seconds
-		longBreakDuration: userConfig.get<number>('longBreakDuration', .25) * 60, // Convert hours to seconds
+		pomodoroDuration: userConfig.get<number>('pomodoroDuration', 25) * 60, // Convert hours to seconds
+		shortBreakDuration: userConfig.get<number>('shortBreakDuration', 5) * 60, // Convert hours to seconds
+		longBreakDuration: userConfig.get<number>('longBreakDuration', 20) * 60, // Convert hours to seconds
 		pomodoroClock: userConfig.get<boolean>('pomodoroClock', true)
 	};
 
 	if (!update) {
 		// Create and show the status bar item with a priority of 100
 		pomodoroStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-		pomodoroStatusBar.tooltip = `${readableNumber(pomodoroCount + 1, true)} phase!`;
+		pomodoroStatusBar.tooltip = 'Click to toggle Pomodoro (single click to pause/start, double click to restart)'; // Set initial tooltip
 		pomodoroStatusBar.show();
+		pomodoroStatusBar.command = 'pomodoro.toggle'; // Set command for status bar item
 	}
+};
+
+/**
+ * Handles click events on the status bar item.
+ * Differentiates between single and double clicks to toggle or restart the Pomodoro timer.
+ */
+const handleClick = () => {
+	if (clickTimeout) {
+		clearTimeout(clickTimeout); // Clear existing timeout if it's a double click
+		clickTimeout = undefined;
+		restartPomodoroTimer(); // Restart Pomodoro on double click
+	} else {
+		clickTimeout = setTimeout(() => {
+			clickTimeout = undefined;
+			togglePomodoroTimer(); // Toggle timer on single click
+		}, clickDelay);
+	}
+};
+
+/**
+ * Toggles the Pomodoro timer between start and pause.
+ */
+const togglePomodoroTimer = () => {
+	if (pomodoroPaused) {
+		// If the timer is paused, resume it
+		startPomodoroTimer(secondsRemaining);
+		pomodoroPaused = false;
+	} else if (pomodoroInterval) {
+		// If the timer is running, pause it
+		stopPomodoroTimer();
+		pomodoroPaused = true;
+	} else {
+		// If the timer is not running, start it
+		startPomodoroTimer(config.pomodoroDuration);
+	}
+};
+
+/**
+ * Restarts the Pomodoro timer from the beginning.
+ */
+const restartPomodoroTimer = () => {
+	stopPomodoroTimer(); // Ensure any existing timer is stopped
+	startPomodoroTimer(config.pomodoroDuration); // Start a new Pomodoro session from the beginning
 };
 
 /**
  * Starts the Pomodoro timer.
  * Initializes the timer and updates the status bar. Handles completion and transitions to break.
+ * 
+ * @param duration - The duration of the Pomodoro session or break in seconds.
  */
-const startPomodoroTimer = () => {
-	let secondsRemaining = config.pomodoroDuration;
-	updateStatusBar(secondsRemaining, false);
+const startPomodoroTimer = (duration: number) => {
+	secondsRemaining = duration; // Set the remaining seconds to the provided duration
+	updateStatusBar(secondsRemaining, false); // Update the status bar to show Pomodoro timer
 
-	// Reset pomodoroCount after every 4 Pomodoros
 	if (pomodoroCount % 4 === 0) {
-		pomodoroCount = 0;
+		pomodoroCount = 0; // Reset the Pomodoro count if needed
 	}
 
-	// Update the status bar every second
 	pomodoroInterval = setInterval(() => {
 		secondsRemaining--;
-		updateStatusBar(secondsRemaining, false);
+		updateStatusBar(secondsRemaining, false); // Update status bar every second
 
 		if (secondsRemaining <= 0) {
 			clearInterval(pomodoroInterval);
 			pomodoroCount++;
-			// playBeep(); // Play beep sound to indicate Pomodoro end
+			playBeep(); // Play beep sound to indicate Pomodoro end
 			showTimedInformationMessage(makeNotification(), 2000); // Show notification for 2 seconds
 			startBreak(); // Start the break timer
 		}
@@ -71,27 +121,25 @@ const startPomodoroTimer = () => {
  */
 const startBreak = () => {
 	const isLongBreak = pomodoroCount % 4 === 0;
-	let secondsRemaining = isLongBreak ? config.longBreakDuration : config.shortBreakDuration;
-	updateStatusBar(secondsRemaining, true);
+	secondsRemaining = isLongBreak ? config.longBreakDuration : config.shortBreakDuration;
+	updateStatusBar(secondsRemaining, true); // Update the status bar to show break timer
 
-	// playBeep(); // Play beep sound to indicate break start
+	playBeep(); // Play beep sound to indicate break start
 
-	// Update the status bar every second
 	pomodoroInterval = setInterval(() => {
 		secondsRemaining--;
-		updateStatusBar(secondsRemaining, true);
+		updateStatusBar(secondsRemaining, true); // Update status bar every second
 
 		if (secondsRemaining <= 0) {
 			clearInterval(pomodoroInterval);
-			// playBeep(); // Play beep sound to indicate break end
+			playBeep(); // Play beep sound to indicate break end
 			showTimedInformationMessage('🟢 Break is over! Time to get back to work.', 2000); // Show notification for 2 seconds
-			startPomodoroTimer(); // Restart the Pomodoro timer
+			startPomodoroTimer(config.pomodoroDuration); // Restart the Pomodoro timer
 		}
 	}, 1000);
 
-	// Reset pomodoroCount after a long break
 	if (isLongBreak) {
-		pomodoroCount = 0;
+		pomodoroCount = 0; // Reset the Pomodoro count after a long break
 	}
 };
 
@@ -102,7 +150,7 @@ const startBreak = () => {
 const stopPomodoroTimer = () => {
 	if (pomodoroInterval) {
 		clearInterval(pomodoroInterval); // Stop the timer
-		pomodoroStatusBar.text = 'Pomodoro stopped'; // Update status bar text
+		pomodoroStatusBar.text = 'Pomodoro paused'; // Update status bar text
 	}
 };
 
@@ -115,9 +163,9 @@ const stopPomodoroTimer = () => {
 const updateStatusBar = (secondsRemaining: number, isBreak: boolean = false) => {
 	const minutes = Math.floor(secondsRemaining / 60).toString().padStart(2, '0');
 	const seconds = (secondsRemaining % 60).toString().padStart(2, '0');
-	pomodoroStatusBar.text = makeStatusBarText(minutes, seconds, isBreak);
+	pomodoroStatusBar.text = makeStatusBarText(minutes, seconds, isBreak); // Update status bar text
 	const color = isBreak ? new vscode.ThemeColor('pomodoro.breakTextColor') : new vscode.ThemeColor('statusBar.foreground');
-	pomodoroStatusBar.color = color;
+	pomodoroStatusBar.color = color; // Update status bar color
 };
 
 /**
@@ -126,8 +174,8 @@ const updateStatusBar = (secondsRemaining: number, isBreak: boolean = false) => 
  * @param custom - Whether to return a custom string for "Long" break. Defaults to true.
  * @returns A string representing the Pomodoro count or "Long" for long breaks.
  */
-const readableNumber = (pc: number, custom: boolean = true) => {
-	switch (pc) {
+const readableNumber = (custom: boolean = true) => {
+	switch (pomodoroCount) {
 		case 1: return '1st';
 		case 2: return '2nd';
 		case 3: return '3rd';
@@ -144,7 +192,7 @@ const readableNumber = (pc: number, custom: boolean = true) => {
  * @returns A formatted string for the status bar text.
  */
 const makeStatusBarText = (m: string, s: string, isBreak: boolean = false): string =>
-	`${isBreak ? '🔴' : '🟢'} ${isBreak ? `${readableNumber(pomodoroCount)} Break` : 'Work'} ${config.pomodoroClock ? `Time: ${m}:${s}` : 'Time'}`;
+	`${isBreak ? '🔴' : '🟢'} ${isBreak ? `${readableNumber()} Break` : 'Work'} ${config.pomodoroClock ? `Time: ${m}:${s}` : 'Time'}`;
 
 /**
  * Displays an information message in a VSCode notification for a specified duration.
@@ -175,7 +223,7 @@ const showTimedInformationMessage = (message: string, duration: number = 3000) =
  * @returns A string representing the notification message with the Pomodoro count and break duration.
  */
 const makeNotification = (): string =>
-	`🔴 ${readableNumber(pomodoroCount, false)} Pomodoro completed! Time for a ${pomodoroCount % 4 !== 0 ? "short" : `${config.longBreakDuration / 60}min`} break.`;
+	`🔴 ${readableNumber(false)} Pomodoro completed! Time for a ${pomodoroCount % 4 !== 0 ? "short" : `${config.longBreakDuration / 60}min`} break.`;
 
 /**
  * Plays a system beep sound.
@@ -183,33 +231,29 @@ const makeNotification = (): string =>
  */
 const playBeep = () => {
 	const platform = process.platform;
-	const command = platform === 'win32' ? 'echo \x07' : 'echo -e "\a"';
-	exec(command, (error) => {
-		if (error) {
-			console.error('Error playing beep sound:', error); // Log error if beep fails
-		}
-	});
+	const command = platform === 'win32' ? 'cmd /c echo \x07' : 'echo -e "\a"'; // Command for Windows and Unix
+	exec(command);
 };
 
 // Activate the extension
 export const activate = (context: vscode.ExtensionContext) => {
 	console.log("Extension activated!");
 	ctx = context;
-	initialize(); // Initialize extension settings
+	initialize();
 
-	// Register commands and status bar item
+	context.subscriptions.push(vscode.commands.registerCommand('pomodoro.toggle', handleClick)); // Register command for click handling
 	context.subscriptions.push(vscode.commands.registerCommand('pomodoro.startPomodoro', startPomodoroTimer));
 	context.subscriptions.push(vscode.commands.registerCommand('pomodoro.stopPomodoro', stopPomodoroTimer));
 	context.subscriptions.push(pomodoroStatusBar);
 	vscode.workspace.onDidChangeConfiguration(() => initialize(true)); // Reinitialize on configuration change
 
-	startPomodoroTimer(); // Start the Pomodoro timer initially
+	startPomodoroTimer(config.pomodoroDuration); // Start Pomodoro timer initially
 };
 
 // Deactivate the extension
 export const deactivate = () => {
 	if (pomodoroInterval) {
-		clearInterval(pomodoroInterval); // Clear the timer on deactivation
+		clearInterval(pomodoroInterval); // Clear timer on deactivation
 	}
 	console.log("Extension deactivated!");
 };

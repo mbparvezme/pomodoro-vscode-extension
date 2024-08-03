@@ -2,7 +2,7 @@
   "name": "pomodoro-for-dev",
   "displayName": "Pomodoro for Dev",
   "description": "Pomodoro is a Visual Studio Code extension that boosts productivity using the Pomodoro technique. It features a customizable clock in the status bar, helping you work in focused intervals with regular breaks. Enhance your coding sessions with Pomodoro.",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "publisher": "mbparvezme",
   "publisherUrl": "https://www.mbparvez.me",
   "engines": {
