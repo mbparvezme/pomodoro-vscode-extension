@@ -73,7 +73,7 @@ You can customize all features of the extension to fit your workflow.
     "pomodoro.autoPauseOnIdle.enabled": false,
 
     // The time in minutes of inactivity before the timer is auto-paused.
-    "pomodoro.autoPauseOnIdle.timeout": 2
+    "pomodoro.autoPauseOnIdle.timeout": 3
 }
 ```
 

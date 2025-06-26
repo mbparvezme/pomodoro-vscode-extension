@@ -63,7 +63,7 @@
         },
         "pomodoro.autoPauseOnIdle.timeout": {
           "type": "number",
-          "default": 1,
+          "default": 3,
           "description": "The time in minutes of inactivity before the timer is auto-paused."
         }
       }
