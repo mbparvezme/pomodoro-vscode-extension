@@ -2,11 +2,10 @@
   "name": "pomodoro-for-dev",
   "displayName": "Pomodoro for Dev",
   "description": "Pomodoro is a Visual Studio Code extension that boosts productivity using the Pomodoro technique. It features a customizable clock in the status bar, helping you work in focused intervals with regular breaks. Enhance your coding sessions with Pomodoro.",
-  "version": "0.9.5",
+  "version": "1.0.0",
   "publisher": "mbparvezme",
-  "publisherUrl": "https://www.mbparvez.me",
   "engines": {
-    "vscode": "^1.91.0"
+    "vscode": "^1.0.0"
   },
   "repository": "https://github.com/mbparvezme/pomodoro-vscode-extension",
   "license": "MIT",
@@ -21,14 +20,54 @@
   "contributes": {
     "commands": [
       {
-        "command": "pomodoro.startPomodoro",
-        "title": "Start Pomodoro"
+        "command": "pomodoro.togglePause",
+        "title": "Pomodoro: Pause/Resume Timer"
       },
       {
-        "command": "pomodoro.stopPomodoro",
-        "title": "Stop Pomodoro"
+        "command": "pomodoro.restartTimer",
+        "title": "Pomodoro: Restart Current Session"
       }
     ],
+    "configuration": {
+      "title": "Pomodoro",
+      "properties": {
+        "pomodoro.pomodoroDuration": {
+          "type": "number",
+          "default": 25,
+          "description": "The duration of a Pomodoro work interval in minutes."
+        },
+        "pomodoro.shortBreakDuration": {
+          "type": "number",
+          "default": 5,
+          "description": "The duration of a short break in minutes."
+        },
+        "pomodoro.longBreakDuration": {
+          "type": "number",
+          "default": 20,
+          "description": "The duration of a long break in minutes (after 4 Pomodoros)."
+        },
+        "pomodoro.pomodoroClock": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the countdown clock in the status bar."
+        },
+        "pomodoro.confirmOnRestart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a confirmation dialog before restarting a session with a double-click."
+        },
+        "pomodoro.autoPauseOnIdle.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable to automatically pause the timer after a period of inactivity during a work session."
+        },
+        "pomodoro.autoPauseOnIdle.timeout": {
+          "type": "number",
+          "default": 1,
+          "description": "The time in minutes of inactivity before the timer is auto-paused."
+        }
+      }
+    },
     "colors": [
       {
         "id": "pomodoro.breakTextColor",
@@ -65,5 +104,8 @@
     "typescript": "^5.4.5",
     "webpack": "^5.92.1",
     "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "play-sound": "^1.1.6"
   }
 }
